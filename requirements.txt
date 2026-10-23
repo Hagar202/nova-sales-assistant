@@ -1,0 +1,16 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+langchain-community
+langchain-core
+langchain-text-splitters
+langchain-huggingface
+faiss-cpu
+sentence-transformers
+pypdf
+pandas
+openpyxl
+transformers
+accelerate
+bitsandbytes
+torch
