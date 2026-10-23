@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova Sales Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>Nova Sales Assistant</h1>
+    </div>
+    <p id="status" class="status">Connecting to the server</p>
+  </header>
+
+  <main class="layout">
+    <aside class="leads" aria-label="Leads">
+      <input id="search" class="search" type="search" placeholder="Search leads by company" aria-label="Search leads">
+      <div class="filters" role="group" aria-label="Filter by priority">
+        <button type="button" data-priority="" aria-pressed="true">All</button>
+        <button type="button" data-priority="Hot" aria-pressed="false">Hot</button>
+        <button type="button" data-priority="Warm" aria-pressed="false">Warm</button>
+        <button type="button" data-priority="Cold" aria-pressed="false">Cold</button>
+        <button type="button" data-priority="Won" aria-pressed="false">Won</button>
+        <button type="button" data-priority="Lost" aria-pressed="false">Lost</button>
+      </div>
+      <p id="lead-count" class="count"></p>
+      <ul id="lead-list" class="lead-list"></ul>
+    </aside>
+
+    <section class="workspace">
+      <article id="lead-card" class="lead-card empty">
+        <p>Pick a lead to see its CRM check: budget, decision maker, priority and the next step.</p>
+      </article>
+
+      <section class="chat" aria-label="Chat">
+        <div id="messages" class="messages" aria-live="polite">
+          <div class="empty-chat">
+            <p>Pick a lead and press <strong>Brief me before the call</strong>, or ask about any price or sales rule.</p>
+          </div>
+        </div>
+
+        <div id="suggestions" class="suggestions"></div>
+
+        <form id="composer" class="composer">
+          <textarea id="input" rows="1" placeholder="Ask about a lead, a price or a sales rule" aria-label="Your question"></textarea>
+          <button id="send" type="submit" class="primary">Send</button>
+        </form>
+
+        <div class="chat-footer">
+          <button id="memory-toggle" type="button" class="link" aria-expanded="false" aria-controls="memory">What the assistant remembers</button>
+          <button id="clear" type="button" class="link">Clear chat and memory</button>
+        </div>
+        <div id="memory" class="memory" hidden></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
