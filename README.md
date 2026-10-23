@@ -3,7 +3,7 @@
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Hagar202/nova-sales-assistant/blob/main/run_in_colab.ipynb)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688)
-![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen)
 
 An AI assistant for the sales team of **Nova Digital Solutions**, a digital agency that sells websites, mobile apps, digital marketing and AI solutions.
 
@@ -19,6 +19,8 @@ Before calling a lead, the sales rep opens the company and gets a short brief: w
 - **Summary memory:** after 5 turns, the oldest 3 are summarized so long chats fit in the context window.
 - **No made-up answers:** questions outside the data get *"I don't have this information."*
 - **REST API** with automatic docs at `/docs`, and a web app that uses the same API.
+
+![Follow-up question](screenshots/followup.png)
 
 ## Architecture
 
@@ -58,6 +60,8 @@ curl -X POST http://localhost:8000/api/chat \
   -d '{"message": "Give me a short brief about Nile Pharma before my call."}'
 ```
 
+![API docs](screenshots/api_docs.png)
+
 ## Results
 
 Measured in the [project notebook](notebooks/mid_project.ipynb):
@@ -68,7 +72,7 @@ Measured in the [project notebook](notebooks/mid_project.ipynb):
 | Follow-up questions that need memory | 4 / 4 |
 | Question outside the data | "I don't have this information." |
 
-Plus 19 automated tests for the rules, memory and API (`pytest`).
+Plus 21 automated tests for the rules, memory and API (`pytest`).
 
 ## Run it
 
@@ -141,4 +145,4 @@ The company and data are fictional, created for this project.
 
 ## Author
 
-**Hagar Soliman**, AI Engineer. [LinkedIn](https://www.linkedin.com/in/hagar-soliman-0a6b41264/?isSelfProfile=true) | [Portfolio](https://hagar202.github.io/portfolio/)
+**Hagar Soliman**, AI Engineer. [LinkedIn](YOUR_LINKEDIN) | [Portfolio](YOUR_PORTFOLIO)

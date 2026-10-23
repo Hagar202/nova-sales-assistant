@@ -41,6 +41,28 @@ PACKAGE_PRICES = {
 }
 MONTHLY_PACKAGES = {"Social Media Management", "Ads Management", "SEO"}
 
+# What each package includes (sections 2 to 5)
+PACKAGE_FEATURES = {
+    "Basic Website": "up to 5 pages, mobile-friendly design, contact form, 1 year hosting",
+    "Business Website": "up to 15 pages, CMS, Arabic and English, basic SEO",
+    "E-commerce Store": "online store, payment gateway (cards and Fawry), product management, order tracking",
+    "Basic App": "one platform (Android or iPhone), up to 8 screens",
+    "Standard App": "Android and iPhone, up to 20 screens, notifications, user accounts",
+    "Advanced App": "Android and iPhone, backend server, admin dashboard, online payment, bookings",
+    "Social Media Management": "3 platforms, 20 posts per month, monthly report",
+    "Ads Management": "Facebook, Instagram and Google ads; ad budget paid separately (minimum $500 per month)",
+    "SEO": "keyword research, website optimization, monthly ranking report",
+    "AI Chatbot": "website and WhatsApp chatbot, answers 24/7 in Arabic and English",
+    "Business Automation": "automating orders, invoices, reports and email follow-ups",
+    "CRM + AI Integration": "AI inside the CRM or ERP: smart replies, lead scoring, automatic reports",
+}
+
+# Packages that are smaller versions of each other (same service, cheaper first)
+PACKAGE_TIERS = [
+    ["Basic Website", "Business Website", "E-commerce Store"],
+    ["Basic App", "Standard App", "Advanced App"],
+]
+
 # Section 7: decision makers
 DECISION_MAKER_WORDS = ("ceo", "owner", "founder", "general manager", "director", "manager")
 
@@ -69,6 +91,14 @@ def format_price(package):
     if package in MONTHLY_PACKAGES:
         return f"${price:,} / month"
     return f"${price:,}"
+
+
+def cheaper_packages(package):
+    """Smaller packages of the same service, for the "price is too high" objection."""
+    for tier in PACKAGE_TIERS:
+        if package in tier:
+            return tier[:tier.index(package)]
+    return []
 
 
 def is_decision_maker(job_title):
@@ -155,6 +185,13 @@ def lead_to_text(row, check):
     )
     if check["at_risk"]:
         crm_check += f"; AT RISK: no contact for {check['days_since_contact']} days"
+
+    package = row["Interested Service"]
+    crm_check += f". {package} includes ONLY: {PACKAGE_FEATURES.get(package, 'unknown')}"
+    smaller = cheaper_packages(package)
+    if smaller:
+        options = "; ".join(f"{p} ({format_price(p)}) includes ONLY: {PACKAGE_FEATURES[p]}" for p in smaller)
+        crm_check += f". Cheaper packages of the same service: {options}"
     return text + crm_check
 
 
@@ -184,7 +221,9 @@ Rules:
 9. Only mention prices, numbers and packages that appear in the Reference data. Never invent prices.
 10. Keep answers short (2 to 4 sentences). Do not write emails or long lists unless the user asks for them.
 11. Every lead ends with a "CRM check" calculated from the playbook rules. Trust it for budget, decision maker, priority and next action.
-12. You are the assistant. The user is a sales rep. Never say that the user's name is your name."""
+12. You are the assistant. The user is a sales rep. Never say that the user's name is your name.
+13. When you suggest a package, describe it ONLY with the features listed for it. Never give a smaller package the features of a bigger one, and say what the lead would give up.
+14. For objections, follow the "Handling Objections" section of the playbook. For "the price is too high": suggest a cheaper package with its price, mention the bundle discount if they need more than one service, and remind them that project payments are split 50% / 30% / 20%."""
 
 SUMMARY_PROMPT = """You summarize a chat between a SALES REP (the user) and an AI ASSISTANT.
 Write short bullet points. Always keep:

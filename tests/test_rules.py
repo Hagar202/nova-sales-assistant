@@ -50,3 +50,16 @@ def test_price_formats():
     assert format_price("SEO") == "$1,000 / month"
     assert format_price("AI Chatbot") == "$5,000 + $300 / month"
     assert format_price("Basic Website") == "$1,500"
+
+
+def test_cheaper_packages_and_features_in_context(assistant):
+    text = assistant.lead_docs[assistant.index_of("L001")].page_content
+    assert "Basic App ($6,000) includes ONLY: one platform (Android or iPhone), up to 8 screens" in text
+    assert "Advanced App includes ONLY:" in text and "bookings" in text
+
+
+def test_no_cheaper_package_for_smallest_or_marketing():
+    from app.assistant import cheaper_packages
+    assert cheaper_packages("Basic Website") == []
+    assert cheaper_packages("SEO") == []
+    assert cheaper_packages("E-commerce Store") == ["Basic Website", "Business Website"]
