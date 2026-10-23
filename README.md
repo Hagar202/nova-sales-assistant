@@ -1,6 +1,6 @@
 # Nova Sales Assistant: RAG + Memory for a CRM
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/nova-sales-assistant/blob/main/run_in_colab.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Hagar202/nova-sales-assistant/blob/main/run_in_colab.ipynb)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688)
 ![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)
@@ -77,7 +77,7 @@ Plus 19 automated tests for the rules, memory and API (`pytest`).
 **Locally with an NVIDIA GPU:**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/nova-sales-assistant.git
+git clone https://github.com/Hagar202/nova-sales-assistant.git
 cd nova-sales-assistant
 pip install -r requirements.txt
 uvicorn app.main:app --port 8000
@@ -141,4 +141,4 @@ The company and data are fictional, created for this project.
 
 ## Author
 
-**Hagar Soliman**, AI Engineer. [LinkedIn](YOUR_LINKEDIN) | [Portfolio](YOUR_PORTFOLIO)
+**Hagar Soliman**, AI Engineer. [LinkedIn](https://www.linkedin.com/in/hagar-soliman-0a6b41264/?isSelfProfile=true) | [Portfolio](https://hagar202.github.io/portfolio/)
