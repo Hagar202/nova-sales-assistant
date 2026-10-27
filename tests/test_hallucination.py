@@ -51,3 +51,12 @@ def test_system_prompt_forbids_outside_knowledge(assistant):
     messages = assistant.build_messages("What is the capital of France?", [], "", "context")
     assert "ONLY the Reference data" in messages[0]["content"]
     assert NO_INFO in messages[0]["content"]
+
+
+def test_never_agrees_that_the_price_is_too_high():
+    from app.assistant import clean_answer
+    question = "They said the price is too high. How should I respond?"
+    assert clean_answer(question, "Yes, the price is too high. Suggest the Standard App.") == "Suggest the Standard App."
+    assert clean_answer(question, "The price is high for them, but X.") == "The price is high for them, but X."
+    assert clean_answer("Is their budget enough?", "Yes, it is.") == "Yes, it is."
+    assert clean_answer("What should I say?", "No, say X.") == "Say X."
