@@ -46,7 +46,7 @@ Good at following instructions, free, and in 4-bit it fits on a free Colab T4 (a
 The CRM sheet is a snapshot from that date. Counting from the real date would make every lead look "at risk" a month later. With live data, `AS_OF_DATE=today`.
 
 **How did you evaluate it?**
-In the notebook: 14 factual questions and 4 follow-ups, all correct, and a question outside the data. Plus 88 automated tests for the rules, lead matching, memory, the fact guard and the API, run by GitHub Actions on every push. The honest limitation: 18 questions is small; the next step is a larger set with an LLM-as-judge.
+In the improved notebook on a free Colab T4: 29 / 30 on the questions used while writing the prompt, and 14 / 14 on new questions written afterwards (counting, two leads, typos, memory, out of scope), 3.7 s per answer on average. Plus 89 automated tests for the rules, lead matching, memory, the fact guard and the API, run by GitHub Actions on every push. The honest limitation: 44 questions is still small and checks one keyword per answer; the next step is a larger set with an LLM-as-judge.
 
 **What would you add for production?**
 Login so each rep sees only their leads, Redis for sessions, vLLM for serving many users, and connecting to the real CRM instead of an Excel sheet.
