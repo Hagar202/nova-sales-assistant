@@ -305,8 +305,8 @@ Rules:
 11. Every lead ends with a "CRM check" calculated from the playbook rules. Trust it for budget, decision maker, priority and next action.
 12. You are the assistant. The user is a sales rep. Never say that the user's name is your name.
 13. When you suggest a package, describe it ONLY with the features listed for it. Never give a smaller package the features of a bigger one, and say what the lead would give up.
-14. For objections, follow the "Handling Objections" section of the playbook. For "the price is too high": suggest a cheaper package with its price, mention the bundle discount if they need more than one service, and remind them that project payments are split 50% / 30% / 20%.
-15. For questions about many leads (counts, lists), use ONLY the CRM overview. Never count leads yourself from single lead rows."""
+14. For objections, follow the "Handling Objections" section of the playbook. For "the price is too high": never start with "Yes" and never agree that the price is too high; if the CRM check says the budget is enough, say their budget covers it and explain the value. Suggest a cheaper package with its price, mention the 15% bundle discount if they need more than one service, and say that project payments are split 50% when signing, 30% at the middle of the project and 20% at delivery.
+15. For questions about many leads (counts, lists), use ONLY the CRM overview. Start with the exact number, never count leads yourself from single lead rows, and never invent a reason why a lead is in a list."""
 
 SUMMARY_PROMPT = """You summarize a chat between a SALES REP (the user) and an AI ASSISTANT.
 Write short bullet points. Always keep:
@@ -332,6 +332,21 @@ _AGGREGATE = re.compile(
 )
 # Words that point back at the lead already open ("compare it with Delta Foods")
 _REFERS_BACK = re.compile(r"\b(it|its|them|they|their|this lead|this one|this company|compare|vs|versus)\b", re.I)
+
+
+_YES_NO_START = ("is", "are", "can", "could", "does", "do", "did", "will", "would", "should", "has", "have", "was", "were")
+
+
+def clean_answer(question, answer):
+    """Small fixes that do not need the model."""
+    # Never open by agreeing that the price is too high ("Yes, the price is too high.")
+    trimmed = re.sub(r"^(?:yes[,.!]?\s+)?(?:the\s+)?price is (?:indeed\s+)?too high[.!]\s*", "", answer, flags=re.I)
+    answer = trimmed or answer
+    # A question that is not yes/no should not get an answer that starts with "Yes," or "No,"
+    words = question.strip().split()
+    if words and words[0].lower() not in _YES_NO_START:
+        answer = re.sub(r"^(?:yes|no)[,.!]?\s+", "", answer, flags=re.I) or answer
+    return answer[:1].upper() + answer[1:]
 
 
 def _has_numbers(text):
@@ -653,6 +668,7 @@ class SalesAssistant:
             if second and len(second_problems) < len(problems) and _has_numbers(second):
                 answer, problems = second, second_problems
 
+        answer = clean_answer(question, answer)
         warnings = [f"{number} is not in the CRM or the playbook. Check it before you quote it." for number in problems]
 
         history = history + [{"user": question, "assistant": answer}]
