@@ -1,0 +1,6 @@
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # long strings in prompts and tests are easier to read on one line

@@ -7,3 +7,5 @@ venv/
 .env
 cloudflared
 server.log
+tunnel.log
+.ruff_cache/

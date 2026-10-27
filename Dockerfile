@@ -1,5 +1,5 @@
 # GPU image: needs an NVIDIA GPU and the NVIDIA Container Toolkit on the host.
-FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
+FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \

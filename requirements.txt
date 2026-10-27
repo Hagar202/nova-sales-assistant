@@ -1,16 +1,21 @@
-fastapi>=0.110
-uvicorn[standard]>=0.29
-pydantic>=2.6
-langchain-community
-langchain-core
-langchain-text-splitters
-langchain-huggingface
-faiss-cpu
-sentence-transformers
-pypdf
-pandas
-openpyxl
-transformers
-accelerate
-bitsandbytes
-torch
+# Web API
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29,<1
+pydantic>=2.6,<3
+httpx>=0.27,<1
+
+# RAG
+langchain-core>=0.3,<2
+langchain-text-splitters>=0.3,<2
+faiss-cpu>=1.8,<2
+sentence-transformers>=3.0,<7
+pypdf>=4.0,<7
+pandas>=2.0,<4
+openpyxl>=3.1,<4
+numpy>=1.26,<3
+
+# Local model (LLM_BACKEND=transformers). Not needed with Ollama (LLM_BACKEND=openai).
+torch>=2.6
+transformers>=4.56,<6
+accelerate>=0.34
+bitsandbytes>=0.43; platform_system != "Darwin"
