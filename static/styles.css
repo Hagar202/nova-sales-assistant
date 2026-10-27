@@ -65,10 +65,10 @@ button, input, textarea { font: inherit; color: inherit; }
 .status.error::before { background: var(--risk); }
 
 /* ---- Layout ---- */
-.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px 1fr; }
+.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); }
 .leads { border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column;
          min-height: 0; padding: 16px 16px 0; }
-.workspace { min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 16px 24px 16px;
+.workspace { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 16px 24px 16px;
              max-width: 960px; width: 100%; margin: 0 auto; }
 
 /* ---- Lead list ---- */
@@ -139,9 +139,18 @@ button, input, textarea { font: inherit; color: inherit; }
 .msg.thinking::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: dots 1.2s steps(4) infinite; }
 @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
 
-.suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 10px; }
+.warnings { list-style: none; margin: 8px 0 0; padding: 6px 10px; border-left: 3px solid var(--risk); border-radius: 6px;
+            background: color-mix(in srgb, var(--risk) 10%, transparent); font-size: 0.83rem; color: var(--risk); }
+.warnings li::before { content: "Check: "; font-weight: 600; }
+.sources { margin-top: 6px; font-size: 0.75rem; color: var(--muted); }
+.sources summary { cursor: pointer; width: fit-content; }
+.sources summary:hover { color: var(--ink); }
+.sources ul { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 1px; }
+.sources .src-lead { color: var(--accent); }
+
+.suggestions { display: flex; gap: 6px; padding: 2px 20px 10px; overflow-x: auto; scrollbar-width: thin; }
 .suggestions button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px;
-                      font-size: 0.83rem; cursor: pointer; }
+                      font-size: 0.83rem; cursor: pointer; white-space: nowrap; flex: none; }
 .suggestions button:hover { border-color: var(--accent); }
 .composer { display: flex; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--line); }
 .composer textarea { flex: 1; resize: none; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
@@ -153,7 +162,7 @@ button, input, textarea { font: inherit; color: inherit; }
 /* ---- Small screens ---- */
 @media (max-width: 860px) {
   html, body { height: auto; }
-  .layout { grid-template-columns: 1fr; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
   .chat { min-height: 480px; }
   .leads { border-right: 0; border-bottom: 1px solid var(--line); max-height: 300px; }
   .workspace { padding: 12px; }

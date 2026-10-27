@@ -3,6 +3,7 @@
 const state = {
   leads: [],
   priority: "",
+  atRiskOnly: false,
   search: "",
   selectedId: null,
   selected: null,
@@ -36,13 +37,23 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+function formatDate(iso) {
+  const date = new Date(iso + "T00:00:00");
+  return isNaN(date) ? iso : date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
 // Model answers can contain **bold** and line breaks; everything else stays plain text.
 function formatAnswer(text) {
   return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
+  let response;
+  try {
+    response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
+  } catch {
+    throw new Error("The server is not reachable. Check that it is still running.");
+  }
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;
     try { detail = (await response.json()).detail || detail; } catch {}
@@ -56,7 +67,8 @@ async function api(path, options = {}) {
 async function loadHealth() {
   try {
     const health = await api("/api/health");
-    els.status.textContent = health.mock ? "Mock mode: no model loaded" : `Ready with ${health.model.split("/").pop()}`;
+    const model = health.mock ? "Mock mode: no model loaded" : `Ready with ${health.model.split("/").pop()}`;
+    els.status.textContent = `${model} · CRM data as of ${formatDate(health.as_of)}`;
     els.status.className = "status " + (health.mock ? "mock" : "ok");
   } catch (error) {
     els.status.textContent = "Server not ready: " + error.message;
@@ -79,6 +91,7 @@ function renderList() {
   const search = state.search.toLowerCase();
   const visible = state.leads.filter((lead) =>
     (!state.priority || lead.priority === state.priority) &&
+    (!state.atRiskOnly || lead.at_risk) &&
     (!search || lead.company.toLowerCase().includes(search)));
 
   els.count.textContent = `${visible.length} of ${state.leads.length} leads`;
@@ -101,7 +114,13 @@ els.search.addEventListener("input", () => { state.search = els.search.value; re
 
 document.querySelectorAll(".filters button").forEach((button) => {
   button.addEventListener("click", () => {
-    state.priority = button.dataset.priority;
+    if (button.dataset.priority === "risk") {
+      state.priority = "";
+      state.atRiskOnly = true;
+    } else {
+      state.priority = button.dataset.priority;
+      state.atRiskOnly = false;
+    }
     document.querySelectorAll(".filters button").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
     renderList();
   });
@@ -187,7 +206,7 @@ async function send(text) {
     });
     saveSession(result.session_id);
     thinking.className = "msg assistant";
-    thinking.innerHTML = `${formatAnswer(result.answer)}<span class="meta">${(result.latency_ms / 1000).toFixed(1)} s</span>`;
+    thinking.innerHTML = formatAnswer(result.answer) + renderWarnings(result.warnings) + renderSources(result.sources, result.latency_ms);
     if (result.lead_id && result.lead_id !== state.selectedId) await selectLead(result.lead_id);
     if (!els.memory.hidden) renderMemory(result.memory);
   } catch (error) {
@@ -224,6 +243,18 @@ els.suggestions.innerHTML = SUGGESTIONS.map((q) => `<button type="button">${esca
 els.suggestions.addEventListener("click", (event) => {
   if (event.target.tagName === "BUTTON") send(event.target.textContent);
 });
+
+function renderWarnings(warnings = []) {
+  if (!warnings.length) return "";
+  return `<ul class="warnings">${warnings.map((w) => `<li>${escapeHtml(w)}</li>`).join("")}</ul>`;
+}
+
+function renderSources(sources = [], latencyMs = 0) {
+  const time = `${(latencyMs / 1000).toFixed(1)} s`;
+  if (!sources.length) return `<span class="meta">${time}</span>`;
+  const items = sources.map((s) => `<li class="src-${escapeHtml(s.kind)}">${escapeHtml(s.label)}</li>`).join("");
+  return `<details class="sources"><summary>${time} · Sources (${sources.length})</summary><ul>${items}</ul></details>`;
+}
 
 // ---------- memory ----------
 
