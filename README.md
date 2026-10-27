@@ -163,7 +163,7 @@ nova-sales-assistant/
 
 ## Limitations and next steps
 
-- **Evaluation is small** (18 questions) and checks for a keyword in the answer. Next: a larger test set and an LLM-as-judge score.
+- **Evaluation is small** (44 questions) and checks for one keyword per answer. Next: a larger test set and an LLM-as-judge score.
 - **The fact guard checks numbers, not words.** A wrong feature is not caught, and a round amount that is not next to a package name can pass if it could be simple math on our prices. Next: check package features the same way, and an LLM-as-judge for the rest.
 - **Sessions live in memory**, so they reset when the server restarts and do not work across several servers. Next: Redis.
 - **No login.** Next: authentication, so each rep sees only their own leads.
