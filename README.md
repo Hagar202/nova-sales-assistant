@@ -74,15 +74,17 @@ curl -X POST http://localhost:8000/api/chat \
 
 ## Results
 
-Measured with Qwen2.5-7B-Instruct in the [project notebook](notebooks/mid_project.ipynb):
+Measured with Qwen2.5-7B-Instruct on a free Colab T4 in the [improved notebook](notebooks/sales_assistant_v2.ipynb):
 
-| Test | Result |
+| Test set | Result |
 |---|---|
-| Factual questions (8 from the playbook, 6 from the leads) | 14 / 14 |
-| Follow-up questions that need memory | 4 / 4 |
-| Question outside the data | "I don't have this information." |
+| Dev questions (30, used while writing the prompt) | 29 / 30 |
+| New questions (14, written after the prompt: counting, two leads, typos, memory, out of scope) | 14 / 14 |
+| Average time per answer | 3.7 s |
 
-Plus 88 automated tests (`pytest`, run on every push by GitHub Actions) for the playbook rules, lead matching, memory, the fact guard and the API.
+The one miss was a lead brief without its priority; the notebook now adds the computed priority to every brief in code, and two more checks were added for price objections and at-risk counts. The [first notebook](notebooks/mid_project.ipynb) has the original step-by-step version.
+
+Plus 89 automated tests (`pytest`, run on every push by GitHub Actions) for the playbook rules, lead matching, memory, the fact guard and the API.
 
 ## Run it
 
@@ -150,7 +152,8 @@ nova-sales-assistant/
 ├── static/              # web app: index.html, styles.css, app.js
 ├── tests/               # pytest: rules, lead matching, memory, fact guard, API
 ├── notebooks/
-│   └── mid_project.ipynb   # original notebook with step-by-step evaluation
+│   ├── sales_assistant_v2.ipynb  # improved notebook: pandas counting, price check, evaluation
+│   └── mid_project.ipynb         # first version
 ├── data/                # leads (.xlsx) and sales playbook (.pdf)
 ├── run_in_colab.ipynb   # one-click launcher for Colab
 ├── DEMO.md              # demo script and questions to expect
