@@ -1,4 +1,4 @@
-"""Shared test setup: real data and rules, fake embeddings and a fake model (no GPU, no downloads)."""
+"""Shared test setup: real data and rules, offline embeddings and a fake model (no GPU, no downloads)."""
 
 import os
 import sys
@@ -9,10 +9,10 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
-
-from langchain_community.embeddings import FakeEmbeddings  # noqa: E402
+os.environ["NOVA_SKIP_DOTENV"] = "1"  # a local .env must not change the tests
 
 from app.assistant import SalesAssistant, load_leads, load_playbook_chunks  # noqa: E402
+from app.embeddings import HashEmbeddings  # noqa: E402
 from app.llm import mock_generate  # noqa: E402
 
 TODAY = date(2026, 10, 22)
@@ -30,4 +30,4 @@ def chunks():
 
 @pytest.fixture()
 def assistant(leads, chunks):
-    return SalesAssistant(leads, chunks, FakeEmbeddings(size=64), mock_generate, today=TODAY)
+    return SalesAssistant(leads, chunks, HashEmbeddings(size=256), mock_generate, today=TODAY)
