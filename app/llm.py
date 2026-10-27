@@ -1,4 +1,10 @@
-"""Loading the language model and the embedding model."""
+"""
+Language model backends. Every backend is a function generate(messages, max_new_tokens) -> str.
+
+  transformers  Qwen2.5-7B-Instruct on your own GPU (4-bit, fits a free Colab T4)
+  openai        any OpenAI-compatible server: Ollama on a laptop, vLLM, Groq, OpenRouter...
+  mock          no model at all, for UI work and tests
+"""
 
 import logging
 import re
@@ -6,33 +12,75 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def load_generate_fn(model_name):
+class LLMError(RuntimeError):
+    """The language model could not answer (server down, timeout, out of memory...)."""
+
+
+def load_transformers_generate(model_name):
     """Load the chat model once and return generate(messages, max_new_tokens) -> str."""
     import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if torch.cuda.is_available():
+        from transformers import BitsAndBytesConfig
+
         # 4-bit quantization: the 7B model needs about a quarter of the memory and fits on a T4
         quantization = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
-        model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", quantization_config=quantization)
+        # float16, not bfloat16: the T4 has no fast bfloat16
+        model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", quantization_config=quantization,
+                                                     dtype=torch.float16)
     else:
-        logger.warning("No GPU found. Loading %s on CPU; use a small model for usable speed.", model_name)
+        logger.warning("No GPU found. Loading %s on CPU; use a small model or LLM_BACKEND=openai with Ollama.",
+                       model_name)
         model = AutoModelForCausalLM.from_pretrained(model_name)
     model.eval()
 
     def generate(messages, max_new_tokens=300):
         text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = tokenizer(text, return_tensors="pt").to(model.device)
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,  # no randomness: the same price every time
-                pad_token_id=tokenizer.eos_token_id,
-            )
+        try:
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=False,  # no randomness: the same price every time
+                    temperature=None, top_p=None, top_k=None,  # unset the sampling defaults (no warnings)
+                    pad_token_id=tokenizer.eos_token_id,
+                )
+        except torch.cuda.OutOfMemoryError as error:
+            torch.cuda.empty_cache()
+            raise LLMError("The GPU ran out of memory. Clear the chat and try a shorter question.") from error
         new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
         return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+    return generate
+
+
+def make_openai_generate(base_url, model, api_key="", timeout=120, client=None):
+    """
+    generate() for any OpenAI-compatible chat completions server.
+    Ollama example: base_url=http://localhost:11434/v1, model=qwen2.5:7b-instruct
+    """
+    import httpx
+
+    url = base_url.rstrip("/") + "/chat/completions"
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    http = client or httpx.Client(timeout=timeout)
+
+    def generate(messages, max_new_tokens=300):
+        payload = {"model": model, "messages": messages, "temperature": 0, "max_tokens": max_new_tokens}
+        try:
+            response = http.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            return (response.json()["choices"][0]["message"]["content"] or "").strip()
+        except httpx.HTTPStatusError as error:
+            raise LLMError(f"The model server answered {error.response.status_code}: "
+                           f"{error.response.text[:200]}") from error
+        except httpx.HTTPError as error:
+            raise LLMError(f"The model server at {base_url} is not reachable ({type(error).__name__}).") from error
+        except (KeyError, IndexError, ValueError) as error:
+            raise LLMError("The model server sent an answer in an unexpected format.") from error
 
     return generate
 
@@ -40,17 +88,29 @@ def load_generate_fn(model_name):
 def mock_generate(messages, max_new_tokens=300):
     """Stand-in model for UI work and tests: repeats the most relevant retrieved line."""
     last = messages[-1]["content"]
-    if "My question:" not in last:  # summary request
+    if "My question:" not in last:  # summary request or retry request
+        if "Answer the same question again" in last:
+            return "I don't have this information."
         return "- Mock summary of the earlier conversation."
     context = last.split("do not copy it as is):", 1)[-1].split("My question:", 1)[0]
-    lines = [line.strip() for line in context.splitlines() if len(line.strip()) > 40]
+    lines = [line.strip() for line in context.splitlines()
+             if len(line.strip()) > 40 and not line.startswith(("Lead(s) we are", "CRM overview"))]
     first = re.split(r"(?<=\.)\s", lines[0])[:3] if lines else ["No context found."]
     return "Mock mode (no model loaded). Top retrieved context: " + " ".join(first)
 
 
-def load_embeddings(model_name, mock=False):
-    if mock:
-        from langchain_community.embeddings import FakeEmbeddings
-        return FakeEmbeddings(size=384)
-    from langchain_huggingface import HuggingFaceEmbeddings
-    return HuggingFaceEmbeddings(model_name=model_name)
+def load_generate_fn(settings):
+    """Pick the backend from the settings."""
+    backend = settings.llm_backend
+    if settings.mock_llm or backend == "mock":
+        logger.warning("Mock mode: answers are not generated by a model")
+        return mock_generate
+    if backend == "openai":
+        logger.info("Using the OpenAI-compatible server at %s with model %s", settings.openai_base_url,
+                    settings.openai_model)
+        return make_openai_generate(settings.openai_base_url, settings.openai_model, settings.openai_api_key,
+                                    settings.llm_timeout_seconds)
+    if backend == "transformers":
+        logger.info("Loading %s (this takes a few minutes the first time)", settings.llm_model)
+        return load_transformers_generate(settings.llm_model)
+    raise ValueError(f"Unknown LLM_BACKEND {backend!r}. Use transformers, openai or mock.")
